@@ -1,0 +1,17 @@
+# macOS junk
+.DS_Store
+
+# Environment / secrets
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (ignore all files in data/ but keep the folder + these files)
+data/*
+!data/.gitkeep
+!data/.gitignore
