@@ -1,0 +1,206 @@
+---
+title: "The Cycle of Disinvestment: Turning Property Distress into Policy Opportunity"
+format:
+  pdf:
+    include-in-header:
+      text: |
+        % Enable wrapping for Pandoc code blocks in PDF
+        \usepackage{fvextra}
+        \usepackage{float}
+        \usepackage{makecell}
+        \usepackage{booktabs}
+        \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+editor: source
+execute-dir: project
+execute: 
+    echo: false
+---
+
+**Group Members, Lecture Section, GitHub Usernames:** 
+
+Aishani Mathur, M/W 10:30, Aishani Mathur
+
+Ayusha Aryal, M/W 10:30, aaryal22
+
+Taha Rashid, M/W 10:30, TahaRashid7
+
+**A. Research Question:**
+
+In our project, we ask two questions about the housing distress across Chicago's 50 wards:
+
+1. **Which wards show early warning signs of future housing instability?** 
+
+That is, where is the disinvestment pipeline just getting started and where can the city still intervene?
+
+2. **In what wards do multiple stages of housing distress overlap simultaneously?**
+
+ A ward that scores high across debt, demolitions, vacancy, and foreclosures is not just entering a housing crisis. Instaed, it is deeply embedded in one and this requires a different policy response.
+
+The motivation for this project is that Chicago has treated property debt and vacant land as separate problems for decades. By the time a property becomes vacant land, the city has already lost twice: once in unpaid utility revenue and again in demolition costs. Our goal was to build a framework that shows where the next loss may occur before it happens.
+
+**B. Methodology:**
+
+Property abandonment in Chicago follows a predictable pipeline: missed utility payments -> debt accumulation -> penalties compound -> the property becomes financially underwater -> the owner walks away -> the structure is demolished -> the land bedomes vacant. Each stage is measurable and represents a potential intervention point. To capture this process, we assembled four datasets:
+
+***Foreclosure Filings:***
+
+Foreclosure filings reflect the early financial stress. This data was scraped from the Institute for Housing Studies Housing Markets Indicator Dataset. 
+
+***Outstanding Utility Debt (365+ Days Overdue):***
+
+Outstanding utility debt reflects the accumulating financial distress. The data was taken from the parcel-level data shared by the Department of Finance at the Chicago Mayor’s Office, covering unpaid water, sewer, garbage, and tax balances plus itemized penalties.
+
+***Demolition Lien Records:***
+
+ Demolition Lien Records reflects  structural failure. This data was taken from the City of Chicago Data Portal Building Permits dataset. We geocoded over 21000 permits to the ward level and distinguished city-initiated demolitions from private-demolitions for a clearer pricture.
+ 
+ 
+***Vacant Land***
+
+ Vacnat land reflects the final outcome of the housing distress. The data was taken from the the Cook County Assessor’s Parcel Universe dataset.
+
+We also constructed a Housing Distress Index to synthesize these indicators. Each variable (foreclosure activity, vacant land counts, demolition records, and outstanding debt) was normalized and averaged for each ward. Wards were then grouped into three risk categories:
+
+Low Risk
+
+Watch
+
+Critical
+
+This classification helps identify which parts of the city may require immediate policy attention.
+
+**C. Key Findings:**
+
+### Vacant Land in Chicago is Highly Concentrated in a Few Wards
+
+```{python}
+#| eval: true
+#| echo: false
+#| warning: false
+import pandas as pd
+import altair as alt
+from pathlib import Path
+import warnings 
+warnings.filterwarnings('ignore')
+alt.renderers.enable("png")
+alt.data_transformers.disable_max_rows()
+
+#Making reproducible data paths
+base_dir = Path.cwd()
+cleaned_dir = base_dir / "dataset" / "cleaned"
+raw_dir = base_dir / "dataset" / "raw"
+
+df = pd.read_csv(cleaned_dir/ "Merged_data.csv")
+debt = pd.read_excel(raw_dir/ "debt.xlsx")
+
+top5 = df.nlargest(5, "vacant_land").copy()
+bottom5 = df.nsmallest(5, "vacant_land").copy()
+
+top5["group"] = "Top 5"
+bottom5["group"] = "Bottom 5"
+
+combined = pd.concat([top5, bottom5])
+combined["ward_num"] = combined["ward_num"].astype(str)
+combined["label"] = combined["vacant_land"].astype(int).astype(str)
+
+bars = alt.Chart(combined).mark_bar().encode(
+    alt.X("vacant_land:Q", title="Vacant land parcels"),
+    alt.Y("ward_num:O", sort=alt.SortField("vacant_land", order="descending"), title="Ward"),
+    color=alt.Color("group:N",
+        scale=alt.Scale(domain=["Top 5", "Bottom 5"], range=["red", "steelblue"]),
+        legend=alt.Legend(title=None)
+    ))
+
+text_labels = alt.Chart(combined).mark_text(align="left", dx=5).encode(
+    alt.X("vacant_land:Q"),
+    alt.Y("ward_num:O", sort=alt.SortField("vacant_land", order="descending")),
+    text="label:N"
+)
+
+vacant_land = (bars + text_labels).properties(
+    title="Top and Bottom 5 Chicago Wards by Vacant Land Parcels",
+    width=650,
+    height=300
+)
+vacant_land
+```
+
+A small number of wards, concentrated on Chicago's South and West Sides, hold thousands of vacant parcels. On the other hand, several North Side wards report fewer than 50. This geographic concentration maps closely onto decades of disinvestment, redlining, and municipal underservice. For our research question, it establishes that vacancy is not a citywide problem requiring a citywide solution.  It is geographically targeted and demands targeted intervention.
+
+### Foreclosures in Chicago Peaked Around 2009 and Declined Sharply Afterward
+
+```{python}
+
+years = list(range(2005, 2025))
+totals = []
+for year in years:
+    col = "foreclosure_" + str(year)
+    total = df[col].sum()
+    totals.append({"year": str(year), "total": total})
+
+foreclosure_df = pd.DataFrame(totals)
+foreclosure_df["label"] = foreclosure_df["total"].round(1).astype(str)
+
+line = alt.Chart(foreclosure_df).mark_line(color="red", strokeWidth=2).encode(
+    alt.X("year:O", title="Year"),
+    alt.Y("total:Q", title="Total foreclosures", scale=alt.Scale(domain=[0, 200])))
+
+points = alt.Chart(foreclosure_df).mark_point(color="red", filled=True, size=60).encode(
+    alt.X("year:O"),
+    alt.Y("total:Q"))
+
+text_labels = alt.Chart(foreclosure_df).mark_text(dy=-12, fontSize=9).encode(
+    alt.X("year:O"),
+    alt.Y("total:Q"),
+    text="label:N")
+
+foreclosure = (line + points + text_labels).properties(
+    title="Total Foreclosures in Chicago",
+    width=650,
+    height=350
+)
+
+foreclosure
+```
+
+Total foreclosures in Chicago peaked from 2008-2010, mirroring the national economic state. It shows a sharp decline after 2010 stabilizing at lower levels for quite a few years. In 2019, foreclosures in Chicago took a slight dip. This is due to the fact that the City of Chicago was not allowed to proceed with foreclosure filings on residential properties during the COVID pandemic. This is corroborated by the increase in foreclosure after the pandemic subdued at 2021. Since then, foreclosures have stablized at the lower levels.
+
+
+### Most of Chicago's outstanding utility debt comes from unpaid water balance
+```{python}
+debt_categories = ["Total Water Balance",
+    "Total Sewer Balance",
+    "Total Water Penalty Balance",
+    "Total Sewer Penalty Balance",
+    "Total Water Tax Balance",
+    "Total Sewer Tax Balance",
+    "Total Garbage Penalty Balance"]
+
+debt_totals = []
+for col in debt_categories:
+    total_millions = debt[col].sum() / 1_000_000
+    debt_totals.append({"category": col, "total_M": total_millions})
+
+debt_df = pd.DataFrame(debt_totals)
+debt_df["label"] = "$" + debt_df["total_M"].round(1).astype(str) + "M"
+
+bars = alt.Chart(debt_df).mark_bar(color="#8B0000").encode(
+    alt.X("total_M:Q", title="Total Outstanding Balance ($M)"),
+    alt.Y("category:N", sort=alt.SortField("total_M", order="descending"), title="Debt Category"))
+
+text_labels = alt.Chart(debt_df).mark_text(align="left", dx=5).encode(
+    alt.X("total_M:Q"),
+    alt.Y("category:N", sort=alt.SortField("total_M", order="descending")),
+    text="label:N")
+
+debt_composition = (bars + text_labels).properties(
+    title="Composition of Outstanding Utility Debt in Chicago",
+    width=650,
+    height=300)
+
+debt_composition
+```
+
+
+Water balance dominates total outstanding debt city-wide in Chicago. This suggests that in aggregate non-payment of core utility services is the primary driver rather than penalty accumulation. However, when examined for the highest-risk wards specifically, we found that the penalties accounted for up to 46% of total outstanding debt, that is city-imposed late fees compounded on top of original balances. This is policy-critical. A targeted penalty waiver program could meaningfully reduce the debt burden in Critical-tier wards without forgiving a single dollar of legitimate service debt.
+
