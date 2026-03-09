@@ -18,6 +18,14 @@ Several datasets exceed GitHub's 100MB file size limit and are hosted externally
 
 The interactive dashboard is deployed at: [https://wardleveldebt.streamlit.app]
 
+Running the Streamlit Dashboard
+
+The interactive dashboard is deployed using Streamlit.
+
+If the app has not been accessed in the last 24 hours, Streamlit automatically puts it to sleep to conserve resources. When this happens, the app may take 30–60 seconds to “wake up” after you open the link.
+
+If the page appears blank or slow to load initially, please wait a moment while the app starts up. Once it wakes up, the dashboard should load normally.
+
 ## Repository Structure
 
 ```
