@@ -9,6 +9,7 @@ execute:
 ```{python}
 import pandas as pd
 import requests
+import numpy as np
 from bs4 import BeautifulSoup
 import geopandas as gpd
 from pathlib import Path
@@ -22,7 +23,52 @@ cleaned_dir.mkdir(parents=True, exist_ok=True)
 
 ##VACANT LAND DATASET
 
-## TK: Code for how the vacant land dataset was subsetted from the parcel dataset ##
+# ─────────────────────────────────────────────
+# Load Data
+# ─────────────────────────────────────────────
+accessors_df = pd.read_csv(
+    "Assessor_-_Parcel_Universe_(Current_Year_Only)_20260211.csv",
+    low_memory=False
+)
+
+accessors_df.head()
+accessors_df.info()
+
+# Print column names
+columns = list(accessors_df.columns)
+print(columns)
+
+# ─────────────────────────────────────────────
+# 1. Filter for Chicago ONLY (Triad 3) and Vacant Land (100 & 190)
+# We use .astype(str) to avoid issues with leading zeros or mixed types
+# ─────────────────────────────────────────────
+chicago_vacant = accessors_df[
+    (accessors_df['triad_code'].astype(str) == '3') &
+    (accessors_df['class'].astype(str).isin(['100', '190']))
+].copy()
+
+print(f"Total Vacant Parcels in Chicago: {len(chicago_vacant)}")
+
+# ─────────────────────────────────────────────
+# 2. Analyze by Chicago Community Area (More granular than Townships)
+# Chicago has 77 community areas; this shows where the actual 'empty' pockets are.
+# ─────────────────────────────────────────────
+vacant_by_community = chicago_vacant['chicago_community_area_name'].value_counts()
+
+print("\nTop 10 Chicago Neighborhoods by Vacant Parcel Count:")
+print(vacant_by_community.head(10))
+
+# ─────────────────────────────────────────────
+# 3. Analyze Transit-Oriented Development (TOD) Potential
+# High walkability + Vacant Land = High development value.
+# ─────────────────────────────────────────────
+prime_vacant_areas = chicago_vacant.groupby('chicago_community_area_name').agg(
+    cmap_walkability_total_score=('cmap_walkability_total_score', 'mean'),
+    vacant_count=('pin', 'count')
+).sort_values('cmap_walkability_total_score', ascending=False)
+
+print("\nTop 5 Neighborhoods with the most 'Walkable' Vacant Land:")
+print(prime_vacant_areas.head(5))
 
 
 ##FORECLOSURE DATASET
@@ -71,13 +117,244 @@ combined_gdf.to_csv(cleaned_dir / "Merged_data.csv", index=False)
 
 ##DEBT DATASET
 
-## TK: Code for how the debt data was subsetted from the bigger debt dataset ##
-## TK: Code for how the debt data was converted to ward level ##
+"""
+Debt by Ward - Chicago
+-----------------------
+Step 1 — Build ZIP-to-ward crosswalk via spatial intersection of:
+           - Chicago ZIP Code boundaries (Chicago Data Portal)
+           - Chicago Ward boundaries 2015-2023 (Chicago Data Portal)
+Step 2 — Load outstanding debt accounts, map to wards via crosswalk,
+          aggregate by debt category and ward.
+
+Source data (download and place in dataset/raw/ before running):
+  - Boundaries_-_ZIP_Codes_20260309.geojson
+      https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-ZIP-Codes/gdcf-axmw
+  - WARDS_2015_20260309.geojson
+      https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Wards-2015-2023-/sp34-6z76
+  - Updated_Accounts_with_Outstanding_Debt_365__20260302.xlsx
+      Chicago Department of Finance
+"""
+
+import geopandas as gpd
+import pandas as pd
+from pathlib import Path
+
+# ---------------------------------------------
+# Paths
+# ---------------------------------------------
+base_dir    = Path.cwd().parents[1]
+raw_dir     = base_dir / "dataset" / "raw"
+cleaned_dir = base_dir / "dataset" / "cleaned"
+cleaned_dir.mkdir(parents=True, exist_ok=True)
+
+# =============================================================================
+# STEP 1: Build ZIP-to-Ward Crosswalk
+# =============================================================================
+
+print("Loading ZIP and ward boundary files...")
+zip_gdf  = gpd.read_file(raw_dir / "Boundaries_-_ZIP_Codes_20260309.geojson")
+ward_gdf = gpd.read_file(raw_dir / "WARDS_2015_20260309.geojson")
+
+print(f"  -> {len(zip_gdf)} ZIP polygons loaded")
+print(f"  -> {len(ward_gdf)} ward polygons loaded")
+
+# Align CRS
+ward_gdf = ward_gdf.to_crs(zip_gdf.crs)
+
+# Auto-detect column names
+zip_col_candidates = [c for c in zip_gdf.columns if c.lower() == "zip"]
+if not zip_col_candidates:
+    raise ValueError(f"Could not find ZIP column. Available columns: {list(zip_gdf.columns)}")
+zip_col = zip_col_candidates[0]
+
+ward_col_candidates = [c for c in ward_gdf.columns if c.lower() == "ward"]
+if not ward_col_candidates:
+    raise ValueError(f"Could not find ward column. Available columns: {list(ward_gdf.columns)}")
+ward_col = ward_col_candidates[0]
+
+print(f"  -> Using ZIP column: '{zip_col}', ward column: '{ward_col}'")
+
+zip_gdf  = zip_gdf.rename(columns={zip_col: "ZIP5"})
+ward_gdf = ward_gdf.rename(columns={ward_col: "ward"})
+
+# Compute ZIP polygon areas before intersection
+# Project to Illinois State Plane (EPSG:3435) for accurate area in feet
+zip_projected            = zip_gdf.to_crs("EPSG:3435")
+zip_gdf["zip_area_sqft"] = zip_projected.geometry.area
+
+# Spatial intersection: each row = one ZIP-ward overlap polygon
+print("Running spatial intersection...")
+intersection = gpd.overlay(
+    zip_gdf[["ZIP5", "zip_area_sqft", "geometry"]],
+    ward_gdf[["ward", "geometry"]],
+    how="intersection",
+    keep_geom_type=False
+)
+
+# Compute share of each ZIP that falls in each ward
+intersection_proj                 = intersection.to_crs("EPSG:3435")
+intersection["overlap_area_sqft"] = intersection_proj.geometry.area
+intersection["area_pct"]          = (
+    intersection["overlap_area_sqft"] / intersection["zip_area_sqft"]
+).round(4)
+
+# Drop slivers (< 1% overlap — likely boundary artifacts)
+crosswalk = intersection[intersection["area_pct"] >= 0.01].copy()
+
+crosswalk = (
+    crosswalk[["ZIP5", "ward", "area_pct"]]
+    .sort_values(["ZIP5", "area_pct"], ascending=[True, False])
+    .reset_index(drop=True)
+)
+crosswalk["ZIP5"] = crosswalk["ZIP5"].astype(str).str.zfill(5)
+crosswalk["ward"] = crosswalk["ward"].astype(int)
+
+print(f"  -> {crosswalk['ZIP5'].nunique()} ZIPs mapped to {crosswalk['ward'].nunique()} wards")
+print(f"  -> {(crosswalk.groupby('ZIP5').size() > 1).sum()} ZIPs span multiple wards")
+
+crosswalk.to_csv(cleaned_dir / "zip_ward_lookup.csv", index=False)
+print(f"  -> Crosswalk saved to: {cleaned_dir / 'zip_ward_lookup.csv'}")
+
+# =============================================================================
+# STEP 2: Aggregate Debt by Ward
+# =============================================================================
+
+print("\nLoading debt data...")
+debt = pd.read_excel(raw_dir / "Updated_Accounts_with_Outstanding_Debt_365__20260302.xlsx")
+print(f"  -> {len(debt):,} records loaded")
+
+# Define debt categories: readable label -> raw column name
+category_cols = {
+    "Water (Service)":     "Total Water Balance",
+    "Sewer (Service)":     "Total Sewer Balance",
+    "Garbage (Service)":   "Total GB Balance",
+    "Water Tax (Service)": "Total Water Tax Balance",
+    "Sewer Tax (Service)": "Total Sewer Tax Balance",
+    "Water Penalty":       "Total Water Penalty Balance",
+    "Sewer Penalty":       "Total Sewer Penalty Balance",
+    "Garbage Penalty":     "Total Garbage Penalty Balance",
+    "Water Tax Penalty":   "Total Water Tax Penalty Balance",
+    "Sewer Tax Penalty":   "Total Sewer Tax Penalty Balance",
+    "Other":               "Total Other Balance",
+}
+
+for label, col in category_cols.items():
+    debt[label] = debt[col].fillna(0) if col in debt.columns else 0
+
+# Join with crosswalk
+zip_ward         = pd.read_csv(cleaned_dir / "zip_ward_lookup.csv")
+zip_ward["ZIP5"] = zip_ward["ZIP5"].astype(str).str[:5]
+debt["ZIP5"]     = debt["ZIP"].astype(str).str[:5]
+
+debt = debt.merge(zip_ward, on="ZIP5", how="left")
+
+unmatched = debt["ward"].isna().sum()
+print(f"  -> {unmatched:,} records could not be matched to a ward (unrecognized ZIP)")
+
+debt      = debt.dropna(subset=["ward"])
+debt["ward"] = debt["ward"].astype(int)
+
+# Aggregate by ward
+agg_cols  = list(category_cols.keys())
+ward_debt = debt.groupby("ward")[agg_cols].sum().reset_index()
+
+ward_debt.to_csv(cleaned_dir / "ward_debt_summary.csv", index=False)
+print(f"\nSaved. Shape: {ward_debt.shape}")
+print(ward_debt.head(5).to_string(index=False))
 
 ##DEMOLITION DATASET
 
-## TK: Code for how the demolition data was subsetted from the bigger  dataset ##
-## TK: Code for how the demolition data was converted to ward level ##
+# ─────────────────────────────────────────────
+# Load & Filter for Demolition Permits
+# ─────────────────────────────────────────────
+# Note: Raw file must be downloaded and placed in dataset/raw/
+# See README for expected filename.
+df_permits = pd.read_csv(raw_dir / "Demolition_20260303.csv")
+
+demo = df_permits[
+    df_permits["PERMIT_TYPE"].str.contains("demolition", case=False, na=False)
+].copy()
+print(f"Demolition permits found: {len(demo):,}")
+
+# Build full address string for geocoding
+demo["full_address"] = (
+    demo["STREET_NUMBER"].astype(str).str.strip()
+    + " "
+    + demo["STREET_DIRECTION"].fillna("").astype(str).str.strip()
+    + " "
+    + demo["STREET_NAME"].astype(str).str.strip()
+    + ", Chicago, IL"
+)
+demo["full_address"] = demo["full_address"].str.replace(r"\s+", " ", regex=True).str.strip()
+
+# ─────────────────────────────────────────────
+# Geocode Addresses via US Census Geocoder
+# ─────────────────────────────────────────────
+GEOCODE_URL = "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress"
+
+def geocode_address(address: str, retries: int = 3) -> tuple[float | None, float | None]:
+    """
+    Geocode a single address using the US Census Geocoder (free, no API key needed).
+    Returns (latitude, longitude) or (None, None) on failure.
+    """
+    params = {"address": address, "benchmark": "Public_AR_Current", "format": "json"}
+    for attempt in range(retries):
+        try:
+            r = requests.get(GEOCODE_URL, params=params, timeout=10)
+            r.raise_for_status()
+            matches = r.json().get("result", {}).get("addressMatches", [])
+            if matches:
+                coords = matches[0]["coordinates"]
+                return float(coords["y"]), float(coords["x"])
+        except Exception:
+            if attempt < retries - 1:
+                time.sleep(1)
+    return None, None
+
+print("Geocoding addresses (this may take a while for large datasets)...")
+lats, lons = [], []
+for i, addr in enumerate(demo["full_address"]):
+    lat, lon = geocode_address(addr)
+    lats.append(lat)
+    lons.append(lon)
+    if (i + 1) % 100 == 0:
+        print(f"  → Geocoded {i + 1}/{len(demo)}")
+    time.sleep(0.05)
+
+demo["latitude"]  = lats
+demo["longitude"] = lons
+
+failed = demo["latitude"].isna().sum()
+print(f"Geocoding complete — {len(demo) - failed:,} succeeded, {failed:,} failed")
+
+# ─────────────────────────────────────────────
+# Spatial Join: Assign Each Permit to a Ward
+# ─────────────────────────────────────────────
+wards = gpd.read_file(raw_dir / "WARDS_2015_20260309.geojson")
+wards = wards.to_crs("EPSG:4326") if wards.crs else wards.set_crs("EPSG:4326")
+
+demo_geo             = demo.dropna(subset=["latitude", "longitude"]).copy()
+demo_geo["geometry"] = demo_geo.apply(lambda r: Point(r["longitude"], r["latitude"]), axis=1)
+demo_gdf             = gpd.GeoDataFrame(demo_geo, geometry="geometry", crs="EPSG:4326")
+
+joined = gpd.sjoin(demo_gdf, wards[["ward", "geometry"]], how="left", predicate="within")
+
+# ─────────────────────────────────────────────
+# Aggregate to Ward Level + Save
+# ─────────────────────────────────────────────
+ward_counts = (
+    joined.groupby("ward")
+    .size()
+    .reset_index(name="demolition_count")
+    .sort_values("demolition_count", ascending=False)
+)
+
+ward_counts.to_csv(cleaned_dir / "demolitions_by_ward.csv", index=False)
+joined.drop(columns="geometry").to_csv(cleaned_dir / "demolitions_with_wards.csv", index=False)
+
+print(f"\nDemolitions by ward saved to: {cleaned_dir / 'demolitions_by_ward.csv'}")
+print(f"Full permit-level data with wards saved to: {cleaned_dir / 'demolitions_with_wards.csv'}")
+print(ward_counts.to_string(index=False))
 
 
 ```
