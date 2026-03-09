@@ -1,0 +1,64 @@
+---
+title: Data Visualization Final Project
+jupyter: python3
+---
+
+### Data Cleaning
+
+
+```{python}
+
+import numpy as np
+import pandas as pd
+
+```
+
+```{python}
+
+
+accessors_df = pd.read_csv("Assessor_-_Parcel_Universe_(Current_Year_Only)_20260211.csv")
+
+accessors_df.head()
+accessors_df.info()
+```
+
+```{python}
+columns = list(accessors_df.columns)
+
+columns
+```
+
+```{python}
+
+
+# 1. Filter for Chicago ONLY (Triad 3) and Vacant Land (100 & 190)
+# We use .astype(str) to avoid issues with leading zeros or mixed types
+chicago_vacant = accessors_df[
+    (accessors_df['triad_code'].astype(str) == '3') & 
+    (accessors_df['class'].astype(str).isin(['100', '190']))
+].copy()
+
+print(f"Total Vacant Parcels in Chicago: {len(chicago_vacant)}")
+
+
+
+# 2. Analyze by Chicago Community Area (More granular than Townships)
+# Chicago has 77 community areas; this shows where the actual 'empty' pockets are.
+vacant_by_community = chicago_vacant['chicago_community_area_name'].value_counts()
+
+print("\nTop 10 Chicago Neighborhoods by Vacant Parcel Count:")
+print(vacant_by_community.head(10))
+
+
+
+# 3. Analyze Transit-Oriented Development (TOD) Potential
+# High walkability + Vacant Land = High development value.
+prime_vacant_areas = chicago_vacant.groupby('chicago_community_area_name').agg({
+    'cmap_walkability_total_score': 'mean',
+    'pin': 'count'
+}).rename(columns={'pin': 'vacant_count'}).sort_values('cmap_walkability_total_score', ascending=False)
+
+print("\nTop 5 Neighborhoods with the most 'Walkable' Vacant Land:")
+print(prime_vacant_areas.head(5))
+```
+
