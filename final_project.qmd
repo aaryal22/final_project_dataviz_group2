@@ -6,77 +6,92 @@ format:
   pdf:
     documentclass: article
     fontsize: 10pt
-    geometry: top=0.7in, bottom=0.7in, left=0.85in, right=0.85in
+    geometry: top=0.75in, bottom=0.75in, left=0.85in, right=0.85in
     include-in-header:
       text: |
         \usepackage{fvextra}
         \usepackage{float}
-        \usepackage{makecell}
         \usepackage{booktabs}
         \usepackage{parskip}
         \usepackage{titlesec}
         \usepackage{xcolor}
-        \usepackage{mdframed}
         \usepackage[T1]{fontenc}
         \usepackage{microtype}
         \usepackage{lmodern}
-        \usepackage{array}
-        \usepackage{tabularx}
         \usepackage{enumitem}
+        \usepackage{fancyhdr}
         \usepackage{titling}
+        \usepackage{multicol}
         \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 
+        % Colors
         \definecolor{chicagored}{HTML}{B22222}
-        \definecolor{slatebg}{HTML}{F4F5F7}
-        \definecolor{rulegray}{HTML}{CCCCCC}
         \definecolor{accentnavy}{HTML}{1B2A4A}
+        \definecolor{rulegray}{HTML}{CCCCCC}
         \definecolor{mutedtext}{HTML}{555555}
-        \definecolor{pillbg}{HTML}{E8ECF2}
+        \definecolor{slatebg}{HTML}{F0F2F5}
 
-        \setlength{\parskip}{3.5pt}
+        % Spacing
+        \setlength{\parskip}{3pt}
         \setlength{\parindent}{0pt}
 
+        % Section formatting
         \titleformat{\section}
           {\color{accentnavy}\normalfont\large\bfseries}
           {}{0em}{}[{\color{rulegray}\titlerule[0.4pt]}]
-        \titlespacing*{\section}{0pt}{7pt}{3pt}
+        \titlespacing*{\section}{0pt}{8pt}{3pt}
 
         \titleformat{\subsection}
           {\color{chicagored}\normalfont\normalsize\bfseries}
           {}{0em}{}
         \titlespacing*{\subsection}{0pt}{5pt}{1pt}
 
-        \newmdenv[
-          backgroundcolor=slatebg,
-          linecolor=rulegray,
-          linewidth=0.5pt,
-          innerleftmargin=8pt,
-          innerrightmargin=8pt,
-          innertopmargin=5pt,
-          innerbottommargin=5pt,
-          skipabove=4pt,
-          skipbelow=4pt
-        ]{methodbox}
-
-        \setlist[itemize]{noitemsep, topsep=2pt, parsep=0pt, leftmargin=14pt}
-        \setlist[enumerate]{noitemsep, topsep=2pt, parsep=0pt, leftmargin=14pt}
-
+        % Title block
         \pretitle{\begin{center}\color{accentnavy}\LARGE\bfseries}
-        \posttitle{\end{center}\vspace{-4pt}}
-        \preauthor{\begin{center}\small\color{mutedtext}}
+        \posttitle{\par\end{center}\vspace{2pt}
+          \begin{center}\color{mutedtext}\large\itshape}
+        \preauthor{\par\end{center}\vspace{4pt}
+          \begin{center}\small\color{mutedtext}}
         \postauthor{\end{center}}
         \predate{}
-        \postdate{}
-author: |
-  Aishani Mathur · Ayusha Aryal · Taha Rashid \
-  \small\textit{M/W 10:30 \quad aishanimathur · aaryal22 · TahaRashid7}
-date: ""
+        \postdate{\vspace{-8pt}}
+
+        % Header/footer
+        \pagestyle{fancy}
+        \fancyhf{}
+        \fancyhead[L]{\small\color{mutedtext}The Cycle of Disinvestment}
+        \fancyhead[R]{\small\color{mutedtext}PPHA 30538 · University of Chicago}
+        \fancyfoot[C]{\small\thepage}
+        \renewcommand{\headrulewidth}{0.3pt}
+        \renewcommand{\footrulewidth}{0pt}
+
+        % List spacing
+        \setlist[itemize]{noitemsep, topsep=2pt, parsep=0pt, leftmargin=14pt}
+        \setlist[enumerate]{noitemsep, topsep=2pt, parsep=0pt, leftmargin=14pt}
+author:
+  - "Aishani Mathur"
+  - "Ayusha Aryal"
+  - "Taha Rashid"
+date: "March 9, 2026"
 editor: source
 execute-dir: project
 execute:
   echo: false
   warning: false
 ---
+
+::: {.content-visible when-format="html"}
+<p style="text-align:center; color:#555; font-size:0.9em; margin-top:-10px;">
+M/W 10:30 &nbsp;·&nbsp; GitHub: aishanimathur · aaryal22 · TahaRashid7
+</p>
+:::
+
+```{=latex}
+\begin{center}
+\small\textcolor{mutedtext}{M/W 10:30 \quad GitHub: aishanimathur \textperiodcentered\ aaryal22 \textperiodcentered\ TahaRashid7}
+\end{center}
+\vspace{4pt}
+```
 
 ## A. Research Question
 
@@ -89,17 +104,24 @@ Chicago has long treated property debt and vacant land as separate problems. By 
 
 ## B. Methodology
 
-Property abandonment follows a predictable pipeline: missed utility payments → debt accumulation → compounding penalties → financial insolvency → owner walkaway → demolition → vacant land. We assembled four ward-level datasets to capture each stage:
+Property abandonment follows a predictable pipeline: missed utility payments → debt accumulation → compounding penalties → financial insolvency → owner walkaway → demolition → vacant land. We assembled four ward-level datasets to capture each stage.
 
-::: {.methodbox latex-env="methodbox"}
-**Foreclosure Filings** *(early financial stress)* — Scraped from the Institute for Housing Studies data portal; geographic labels cleaned to numeric ward IDs.
+\vspace{4pt}
+\noindent\colorbox{slatebg}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+\vspace{4pt}
+\textbf{Foreclosure Filings} \textit{(early financial stress)} --- Scraped from the Institute for Housing Studies data portal; geographic labels cleaned to numeric ward IDs.
 
-**Outstanding Utility Debt 365+ days overdue** *(accumulating distress)* — From the Chicago Dept. of Finance, 143,000+ parcel accounts. No ward IDs existed — only ZIP codes — so we built a ZIP-to-ward crosswalk via spatial intersection of boundary polygons, proportionally allocating accounts spanning multiple wards.
+\smallskip
+\textbf{Outstanding Utility Debt 365+ days overdue} \textit{(accumulating distress)} --- From the Chicago Dept.\ of Finance, 143{,}000+ parcel accounts. No ward IDs existed --- only ZIP codes --- so we built a ZIP-to-ward crosswalk via spatial intersection of boundary polygons, proportionally allocating accounts spanning multiple wards.
 
-**Demolition Lien Records** *(structural failure)* — From the City of Chicago Data Portal. 21,000+ permits geocoded via the U.S. Census API and spatially joined to ward polygons using GeoPandas. City-initiated and private demolitions were distinguished.
+\smallskip
+\textbf{Demolition Permit Records} \textit{(structural failure)} --- From the City of Chicago Data Portal. 21{,}000+ permits geocoded via the U.S.\ Census Geocoder API and spatially joined to ward polygons using GeoPandas. City-initiated and private demolitions were distinguished.
 
-**Vacant Land** *(final outcome)* — From the Cook County Assessor's Parcel Universe. Coordinates converted to point geometries and spatially joined to ward boundaries. A lightweight file (`vacant_minimal.csv`) was created to handle the 1.8M+ record dataset.
-:::
+\smallskip
+\textbf{Vacant Land} \textit{(final outcome)} --- From the Cook County Assessor's Parcel Universe. Coordinates converted to point geometries and spatially joined to ward boundaries. A lightweight file (\texttt{vacant\_minimal.csv}) was created to handle the 1.8M+ record dataset.
+\vspace{4pt}
+}}
+\vspace{4pt}
 
 All indicators were aggregated to Chicago's 50 wards and merged on ward ID. A **Housing Distress Index** was constructed by normalizing and averaging all four indicators, grouping wards into **Low Risk**, **Watch**, and **Critical** tiers.
 
@@ -121,19 +143,19 @@ warnings.filterwarnings('ignore')
 alt.renderers.enable("png")
 alt.data_transformers.disable_max_rows()
 
-base_dir = Path.cwd()
+base_dir    = Path.cwd()
 cleaned_dir = base_dir / "data" / "derived-data"
 
-df = pd.read_csv(cleaned_dir / "Merged_data.csv")
+df   = pd.read_csv(cleaned_dir / "Merged_data.csv")
 debt = pd.read_csv(cleaned_dir / "ward_debt_summary.csv")
 
-top5 = df.nlargest(5, "vacant_land").copy()
+top5    = df.nlargest(5, "vacant_land").copy()
 bottom5 = df.nsmallest(5, "vacant_land").copy()
-top5["group"] = "Top 5"
+top5["group"]    = "Top 5"
 bottom5["group"] = "Bottom 5"
-combined = pd.concat([top5, bottom5])
+combined             = pd.concat([top5, bottom5])
 combined["ward_num"] = combined["ward_num"].astype(str)
-combined["label"] = combined["vacant_land"].astype(int).astype(str)
+combined["label"]    = combined["vacant_land"].astype(int).astype(str)
 
 bars = alt.Chart(combined).mark_bar(cornerRadiusTopRight=3, cornerRadiusBottomRight=3).encode(
     alt.X("vacant_land:Q", title="Vacant land parcels",
@@ -144,32 +166,27 @@ bars = alt.Chart(combined).mark_bar(cornerRadiusTopRight=3, cornerRadiusBottomRi
         scale=alt.Scale(domain=["Top 5", "Bottom 5"], range=["#B22222", "#4A7BA7"]),
         legend=alt.Legend(title=None, labelFontSize=8, orient="bottom-right")))
 
-text_labels = alt.Chart(combined).mark_text(align="left", dx=4, fontSize=8, color="#333333").encode(
+text_labels = alt.Chart(combined).mark_text(align="left", dx=4, fontSize=8).encode(
     alt.X("vacant_land:Q"),
     alt.Y("ward_num:O", sort=alt.SortField("vacant_land", order="descending")),
     text="label:N")
 
-vacant_land_chart = (bars + text_labels).properties(
-    title=alt.TitleParams(
-        "Top & Bottom 5 Wards by Vacant Land Parcels",
+(bars + text_labels).properties(
+    title=alt.TitleParams("Top & Bottom 5 Wards by Vacant Land Parcels",
         fontSize=10, fontWeight="bold", color="#1B2A4A", anchor="start"),
-    width=400, height=145
-).configure_view(
-    strokeWidth=0, fill="#F4F5F7"
-).configure_axis(
-    gridColor="#E0E0E0", domainColor="#CCCCCC"
-)
-vacant_land_chart
+    width=420, height=150
+).configure_view(strokeWidth=0, fill="#F0F2F5"
+).configure_axis(gridColor="#E0E0E0", domainColor="#CCCCCC")
 ```
 
 South and West Side wards hold thousands of vacant parcels; several North Side wards report fewer than 50. Vacancy is spatially concentrated — not a citywide problem — and demands geographically targeted intervention.
 
-::: {layout-ncol=2}
+\begin{multicols}{2}
 
-### Foreclosures Peaked 2008–2010 {.unnumbered}
+\subsubsection*{Foreclosures Peaked 2008--2010}
 
 ```{python}
-years = list(range(2005, 2025))
+years  = list(range(2005, 2025))
 totals = [{"year": str(y), "total": df["foreclosure_" + str(y)].sum()} for y in years]
 foreclosure_df = pd.DataFrame(totals)
 
@@ -187,18 +204,19 @@ points = alt.Chart(foreclosure_df).mark_point(
     color="#B22222", filled=True, size=25).encode(
     alt.X("year:O"), alt.Y("total:Q"))
 
-foreclosure_chart = (area + line + points).properties(
+(area + line + points).properties(
     title=alt.TitleParams("Total Foreclosures in Chicago",
         fontSize=9, fontWeight="bold", color="#1B2A4A", anchor="start"),
-    width=188, height=125
-).configure_view(strokeWidth=0, fill="#F4F5F7"
+    width=190, height=130
+).configure_view(strokeWidth=0, fill="#F0F2F5"
 ).configure_axis(gridColor="#E8E8E8", domainColor="#CCCCCC")
-foreclosure_chart
 ```
 
-Foreclosures peaked 2008–2010 with the national financial crisis, then fell sharply. A COVID moratorium caused the 2019–2020 dip; modest rebound followed in 2021.
+Foreclosures peaked 2008--2010 with the financial crisis, then declined sharply. A COVID moratorium drove the 2019--2020 dip; a modest rebound followed in 2021.
 
-### Utility Debt Dominated by Water {.unnumbered}
+\columnbreak
+
+\subsubsection*{Utility Debt Dominated by Water}
 
 ```{python}
 debt = debt.rename(columns={
@@ -218,31 +236,30 @@ bars2 = alt.Chart(debt_df).mark_bar(
           axis=alt.Axis(labelFontSize=7, titleFontSize=8)),
     alt.Y("category:N", sort=alt.SortField("total_M", order="descending"),
           title=None, axis=alt.Axis(labelFontSize=7)))
-text2 = alt.Chart(debt_df).mark_text(align="left", dx=3, fontSize=7, color="#333333").encode(
+text2 = alt.Chart(debt_df).mark_text(align="left", dx=3, fontSize=7).encode(
     alt.X("total_M:Q"),
     alt.Y("category:N", sort=alt.SortField("total_M", order="descending")),
     text="label:N")
 
-debt_chart = (bars2 + text2).properties(
+(bars2 + text2).properties(
     title=alt.TitleParams("Outstanding Utility Debt by Category",
         fontSize=9, fontWeight="bold", color="#1B2A4A", anchor="start"),
-    width=188, height=125
-).configure_view(strokeWidth=0, fill="#F4F5F7"
+    width=190, height=130
+).configure_view(strokeWidth=0, fill="#F0F2F5"
 ).configure_axis(gridColor="#E8E8E8", domainColor="#CCCCCC")
-debt_chart
 ```
 
 Water balance dominates city-wide debt. In Critical-tier wards, penalties reach **46% of total debt** — a targeted waiver program could reduce burden without forgiving legitimate service charges.
 
-:::
+\end{multicols}
 
 \newpage
 
-## D. Dashboard, Policy Implications & Limitations
+## D. Dashboard, Policy Implications \& Limitations
 
-**Dashboard:** [wardleveldebt.streamlit.app](https://wardleveldebt.streamlit.app) — The same wards recur at every pipeline stage; water debt reliably proxies broader property debt; penalty accumulation amplifies distress in Critical-tier wards well beyond original service costs.
+**Dashboard:** [wardleveldebt.streamlit.app](https://wardleveldebt.streamlit.app) — The same wards recur at every pipeline stage; water debt reliably proxies broader property distress; penalty accumulation amplifies distress in Critical-tier wards well beyond original service costs.
 
-### Policy Implications {.unnumbered}
+### Policy Implications
 
 The pipeline must be interrupted **early** — before foreclosure, not after demolition.
 
@@ -251,11 +268,11 @@ The pipeline must be interrupted **early** — before foreclosure, not after dem
 3. **Preventive maintenance support** — Inspections and repair grants for Watch-tier wards; deterioration prevention is cheaper than demolition.
 4. **Land bank & rehabilitation programs** — Extended to Critical-tier wards already past the tipping point.
 
-### Difficulties Encountered {.unnumbered}
+### Difficulties Encountered
 
-The Cook County Assessor dataset (1.8M+ records) required a coordinate-only lightweight file for tractable spatial processing. Demolition permits required geocoding via repeated Census API requests with careful rate-limit management. Ward identifiers were formatted inconsistently across all sources and required harmonization before merging.
+The Cook County Assessor dataset (1.8M+ records) required a coordinate-only lightweight file for tractable spatial processing. Demolition permits required geocoding 21,000+ addresses via repeated Census API requests with careful rate-limit management. Ward identifiers were formatted inconsistently across all sources and required harmonization before merging.
 
-### Limitations {.unnumbered}
+### Limitations
 
 - **Administrative data bias** — Records capture only formal government interactions; early-stage distress may be underrepresented.
 - **Equal-weight index** — The Housing Distress Index assigns equal weight to all four indicators, which may not reflect true relative severity.
