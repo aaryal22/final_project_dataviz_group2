@@ -18,7 +18,7 @@ execute:
 
 **Group Members, Lecture Section, GitHub Usernames:** 
 
-Aishani Mathur, M/W 10:30, Aishani Mathur
+Aishani Mathur, M/W 10:30, aishanimathur
 
 Ayusha Aryal, M/W 10:30, aaryal22
 
@@ -45,19 +45,31 @@ Property abandonment in Chicago follows a predictable pipeline: missed utility p
 ***Foreclosure Filings:***
 
 Foreclosure filings reflect the early financial stress. This data was scraped from the Institute for Housing Studies Housing Markets Indicator Dataset. 
+Using a scripted web request, we scraped the ward-level foreclosure table from the Institute for Housing Studies data portal and converted it into a structured dataset. The geographic labels (e.g., “Ward 1”, “Ward 2”) were cleaned to extract numeric ward identifiers so that they could be merged with other ward-level datasets.
 
 ***Outstanding Utility Debt (365+ Days Overdue):***
 
 Outstanding utility debt reflects the accumulating financial distress. The data was taken from the parcel-level data shared by the Department of Finance at the Chicago Mayor’s Office, covering unpaid water, sewer, garbage, and tax balances plus itemized penalties.
+TAHA ADD HOW U CLEANED DATA
 
 ***Demolition Lien Records:***
 
  Demolition Lien Records reflects  structural failure. This data was taken from the City of Chicago Data Portal Building Permits dataset. We geocoded over 21000 permits to the ward level and distinguished city-initiated demolitions from private-demolitions for a clearer pricture.
+ TAHA ADD HOW U CLEANED DATA
  
  
 ***Vacant Land***
 
- Vacnat land reflects the final outcome of the housing distress. The data was taken from the the Cook County Assessor’s Parcel Universe dataset.
+Vacnat land reflects the final outcome of the housing distress. The data was taken from the the Cook County Assessor’s Parcel Universe dataset.
+Because these data are recorded at the parcel level with geographic coordinates, we converted latitude and longitude fields into spatial point geometries using GeoPandas. We then spatially joined each parcel to Chicago’s ward boundary polygons in order to assign each parcel to the ward in which it is located. The parcel-level data were subsequently aggregated to compute the total number of vacant parcels within each ward. Because the original parcel file was extremely large, we created a lightweight dataset containing only parcel coordinates. This dataset (vacant_minimal.csv) was then converted into spatial points and joined with Chicago ward boundaries using GeoPandas to assign each parcel to a ward.
+
+
+***Spatial integration and Data merging***
+To ensure comparability across datasets, all parcel-level information was aggregated to Chicago’s 50 wards using ward boundary geometries as the common geographic unit. Spatial joins were used to assign parcel-level observations—including vacant land and demolition permits—to ward polygons. These parcel-level records were then aggregated to generate ward-level indicators of vacancy and demolition activity.
+
+Ward-level foreclosure statistics, debt totals, demolition counts, and vacancy counts were then merged into a single dataset using ward identifiers as the join key.
+
+***Housing Distress index***
 
 We also constructed a Housing Distress Index to synthesize these indicators. Each variable (foreclosure activity, vacant land counts, demolition records, and outstanding debt) was normalized and averaged for each ward. Wards were then grouped into three risk categories:
 
@@ -204,3 +216,41 @@ debt_composition
 
 Water balance dominates total outstanding debt city-wide in Chicago. This suggests that in aggregate non-payment of core utility services is the primary driver rather than penalty accumulation. However, when examined for the highest-risk wards specifically, we found that the penalties accounted for up to 46% of total outstanding debt, that is city-imposed late fees compounded on top of original balances. This is policy-critical. A targeted penalty waiver program could meaningfully reduce the debt burden in Critical-tier wards without forgiving a single dollar of legitimate service debt.
 
+### Link to the Dashboard
+https://wardleveldebt.streamlit.app
+
+Key takeaways from our dashboard:
+
+1. The same wards consistently appear as we spatially map each stage of the housing distress pipeline, directly relating to our research question about which wards are most sensitive to overlapping stages of housing distress.
+2. Water debt appears to be a reliable proxy for broader property debt- mimicking same patterns
+3. Some unexpected wards appear in the demolition lien data, but closer examination shows that these cases are largely driven by private demolition requests, which distinguishes them from the broader distress patterns.
+4. Also, the foreclosure temporal trend is largely consistent across all the wards! 
+5. In many wards, penalties make up a significant share of total utility debt, suggesting that accumulated late fees and interest may be amplifying financial distress beyond the original service costs.
+
+
+
+
+### Policy implications from dashboard
+
+We need to get to wards in distress in the first stages of the pipeline itself - interrupt the pipeline before foreclosure occurs! 
+1. Targeted penalty waivers, given how we saw that a big the chunk of penalties was in the graph for outstanding debt. 
+2. Proactive debt intervention, which would include debt restructuring, outreach to owners with large unpaid bills, connecting owners with assistance programs.
+3. Preventing deterioration is usually cheaper than demolition, so proactive inspections and property maintenance support would help. 
+4. For other wards that are in critical category: land bank programs, affordable housing development, rehabilitation grants need to be extended. 
+
+### Weaknesses of study/Difficulties that we encountered
+
+D. Difficulties Encountered
+
+This project required integrating multiple datasets collected by different institutions and at different levels of geographic granularity. A major challenge involved working with the Cook County Assessor’s Parcel Universe dataset, which contains more than 1.8 million parcel records and occupies several gigabytes of memory when loaded. Processing this dataset directly was computationally expensive and slowed spatial operations considerably. To make the workflow manageable and ensure that the dashboard could run efficiently, we created a lightweight dataset containing only the geographic coordinates of vacant parcels (vacant_minimal.csv). This reduced file size dramatically and allowed us to perform spatial joins and visualization tasks without overwhelming system memory.
+
+Another challenge involved the demolition lien dataset. The demolition permit records was huge, and were not pre-assigned to Chicago wards. Instead, the dataset only provided latitude and longitude coordinates. To assign each demolition record to a ward, we needed to geocode and spatially match these coordinates with ward boundary geometries. This process required repeated API requests and spatial processing within VS Code, which was computationally slow and required careful handling to avoid API limits and coordinate errors.
+
+Finally, integrating multiple datasets required extensive data cleaning and harmonization. Ward identifiers were formatted differently across sources (e.g., “Ward 1” versus numeric values), and geographic boundaries needed to be standardized to the same coordinate reference system before spatial joins could be performed. Ensuring consistency across datasets was necessary for accurate merging and aggregation.
+
+Some limitations of this study are:
+First, the study relies on administrative datasets that capture only formal interactions with government systems. Many properties may experience financial distress or physical deterioration long before they appear in these datasets. As a result, our indicators may underestimate early-stage distress in some neighborhoods.
+
+Secondly, the Housing Distress Index constructed in this project relies on a normalization and averaging procedure that assigns equal weight to each indicator. Although this approach provides a simple and transparent way to combine variables, it assumes that foreclosure activity, vacancy, demolition activity, and outstanding debt contribute equally to housing distress.
+
+Thirdly, the study primarily captures a cross-sectional snapshot of housing distress rather than a full dynamic analysis of how properties move through the disinvestment pipeline over time. While the foreclosure time series provides some temporal context, most indicators are analyzed at a single point in time, limiting our ability to observe causal transitions between stages.
