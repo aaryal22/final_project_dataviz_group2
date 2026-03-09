@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="quarto-1.7.30" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+
+<meta name="author" content="Aishani Mathur · Ayusha Aryal · Taha Rashid " />
+
+<title>The Cycle of Disinvestment</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+<!-- htmldependencies:E3FAD763 -->
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">The Cycle of Disinvestment</h1>
+<p class="subtitle lead">Turning Property Distress into Policy Opportunity</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p> </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="a.-research-question" class="level2">
+<h2>A. Research Question</h2>
+<p>This project asks two questions about housing distress across Chicago’s 50 wards:</p>
+<ol type="1">
+<li><strong>Which wards show early warning signs of future housing instability?</strong> Where is the disinvestment pipeline just beginning, and where can the city still intervene?</li>
+<li><strong>In what wards do multiple stages of housing distress overlap simultaneously?</strong> A ward scoring high across debt, demolitions, vacancy, and foreclosures is deeply embedded in a crisis — requiring a different policy response than one just entering it.</li>
+</ol>
+<p>Chicago has long treated property debt and vacant land as separate problems. By the time a property becomes vacant land, the city has already lost twice: once in unpaid utility revenue and again in demolition costs. This project builds a framework to identify where the next loss may occur <em>before</em> it happens.</p>
+</section>
+<section id="b.-methodology" class="level2">
+<h2>B. Methodology</h2>
+<p>Property abandonment follows a predictable pipeline: missed utility payments → debt accumulation → compounding penalties → financial insolvency → owner walkaway → demolition → vacant land. We assembled four ward-level datasets to capture each stage:</p>
+<div class="methodbox" data-latex-env="methodbox">
+<p><strong>Foreclosure Filings</strong> <em>(early financial stress)</em> — Scraped from the Institute for Housing Studies data portal; geographic labels cleaned to numeric ward IDs.</p>
+<p><strong>Outstanding Utility Debt 365+ days overdue</strong> <em>(accumulating distress)</em> — From the Chicago Dept. of Finance, 143,000+ parcel accounts. No ward IDs existed — only ZIP codes — so we built a ZIP-to-ward crosswalk via spatial intersection of boundary polygons, proportionally allocating accounts spanning multiple wards.</p>
+<p><strong>Demolition Lien Records</strong> <em>(structural failure)</em> — From the City of Chicago Data Portal. 21,000+ permits geocoded via the U.S. Census API and spatially joined to ward polygons using GeoPandas. City-initiated and private demolitions were distinguished.</p>
+<p><strong>Vacant Land</strong> <em>(final outcome)</em> — From the Cook County Assessor’s Parcel Universe. Coordinates converted to point geometries and spatially joined to ward boundaries. A lightweight file (<code>vacant_minimal.csv</code>) was created to handle the 1.8M+ record dataset.</p>
+</div>
+<p>All indicators were aggregated to Chicago’s 50 wards and merged on ward ID. A <strong>Housing Distress Index</strong> was constructed by normalizing and averaging all four indicators, grouping wards into <strong>Low Risk</strong>, <strong>Watch</strong>, and <strong>Critical</strong> tiers.</p>
+</section>
+<section id="c.-key-findings" class="level2">
+<h2>C. Key Findings</h2>
+<section id="vacant-land-is-highly-concentrated-in-a-few-wards" class="level3">
+<h3>Vacant Land is Highly Concentrated in a Few Wards</h3>
+<div id="7ddbb60f" class="cell" data-execution_count="1">
+<div class="cell-output cell-output-display" data-execution_count="19">
+<div>
+<figure>
+<p><img src="final_project_files/figure-html/cell-2-output-1.png" width="451" height="197" /></p>
+</figure>
+</div>
+</div>
+</div>
+<p>South and West Side wards hold thousands of vacant parcels; several North Side wards report fewer than 50. Vacancy is spatially concentrated — not a citywide problem — and demands geographically targeted intervention.</p>
+</section>
+<div class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div id="68fc4a9e" class="cell quarto-layout-cell" data-execution_count="2" style="flex-basis: 50.0%;justify-content: flex-start;">
+<section id="foreclosures-peaked-20082010" class="level3 unnumbered">
+<h3 class="unnumbered">Foreclosures Peaked 2008–2010</h3>
+<div class="cell-output cell-output-display" data-execution_count="20">
+<div>
+<figure>
+<p><img src="final_project_files/figure-html/cell-3-output-1.png" width="229" height="185" /></p>
+</figure>
+</div>
+</div>
+</section>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<p>Foreclosures peaked 2008–2010 with the national financial crisis, then fell sharply. A COVID moratorium caused the 2019–2020 dip; modest rebound followed in 2021.</p>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div id="8933c16e" class="cell quarto-layout-cell" data-execution_count="3" style="flex-basis: 50.0%;justify-content: flex-start;">
+<section id="utility-debt-dominated-by-water" class="level3 unnumbered">
+<h3 class="unnumbered">Utility Debt Dominated by Water</h3>
+<div class="cell-output cell-output-display" data-execution_count="21">
+<div>
+<figure>
+<p><img src="final_project_files/figure-html/cell-4-output-1.png" width="270" height="174" /></p>
+</figure>
+</div>
+</div>
+</section>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<p>Water balance dominates city-wide debt. In Critical-tier wards, penalties reach <strong>46% of total debt</strong> — a targeted waiver program could reduce burden without forgiving legitimate service charges.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="d.-dashboard-policy-implications-limitations" class="level2">
+<h2>D. Dashboard, Policy Implications &amp; Limitations</h2>
+<p><strong>Dashboard:</strong> <a href="https://wardleveldebt.streamlit.app">wardleveldebt.streamlit.app</a> — The same wards recur at every pipeline stage; water debt reliably proxies broader property debt; penalty accumulation amplifies distress in Critical-tier wards well beyond original service costs.</p>
+<section id="policy-implications" class="level3 unnumbered">
+<h3 class="unnumbered">Policy Implications</h3>
+<p>The pipeline must be interrupted <strong>early</strong> — before foreclosure, not after demolition.</p>
+<ol type="1">
+<li><strong>Targeted penalty waivers</strong> — In Critical-tier wards, penalties comprise up to 46% of total debt; waivers reduce burden without forgiving core service charges.</li>
+<li><strong>Proactive debt intervention</strong> — Restructuring plans, owner outreach, and connection to assistance programs before properties become financially underwater.</li>
+<li><strong>Preventive maintenance support</strong> — Inspections and repair grants for Watch-tier wards; deterioration prevention is cheaper than demolition.</li>
+<li><strong>Land bank &amp; rehabilitation programs</strong> — Extended to Critical-tier wards already past the tipping point.</li>
+</ol>
+</section>
+<section id="difficulties-encountered" class="level3 unnumbered">
+<h3 class="unnumbered">Difficulties Encountered</h3>
+<p>The Cook County Assessor dataset (1.8M+ records) required a coordinate-only lightweight file for tractable spatial processing. Demolition permits required geocoding via repeated Census API requests with careful rate-limit management. Ward identifiers were formatted inconsistently across all sources and required harmonization before merging.</p>
+</section>
+<section id="limitations" class="level3 unnumbered">
+<h3 class="unnumbered">Limitations</h3>
+<ul>
+<li><strong>Administrative data bias</strong> — Records capture only formal government interactions; early-stage distress may be underrepresented.</li>
+<li><strong>Equal-weight index</strong> — The Housing Distress Index assigns equal weight to all four indicators, which may not reflect true relative severity.</li>
+<li><strong>Cross-sectional design</strong> — Most indicators reflect a single point in time, limiting causal inference about how properties move through the pipeline.</li>
+</ul>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id = "quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+</body>
+
+</html>
