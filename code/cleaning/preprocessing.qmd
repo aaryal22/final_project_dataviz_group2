@@ -1,3 +1,12 @@
+---
+title: "Data Preprocessing"
+format: html
+execute:
+  echo: true
+---
+
+
+```{python}
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -71,4 +80,5 @@ combined_gdf.to_csv(cleaned_dir / "Merged_data.csv", index=False)
 ## TK: Code for how the demolition data was converted to ward level ##
 
 
+```
 
