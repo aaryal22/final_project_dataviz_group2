@@ -8,28 +8,30 @@ from pathlib import Path
 st.set_page_config(layout="wide")
 st.title("Chicago Housing Distress Dashboard (2026)")
 
-BASE = Path(__file__).parent
+BASE        = Path(__file__).parent
+DERIVED     = BASE.parent / "data" / "derived-data"
+RAW         = BASE.parent / "data" / "raw-data"
 
 # -----------------------------
 # CACHED LOADERS
 # -----------------------------
 @st.cache_data
 def load_wards_geo():
-    gdf = gpd.read_file(BASE / "dataset" / "cleaned" / "wards_2023_final_dashboard.geojson")
+    gdf = gpd.read_file(DERIVED / "wards_2023_final_dashboard.geojson")
     gdf = gdf.to_crs(epsg=4326)
     gdf["ward"] = gdf["ward"].astype(int)
     return gdf
 
 @st.cache_data
 def load_vacant_csv():
-    vacant = pd.read_csv(BASE / "vacant_minimal.csv")
+    vacant = pd.read_csv(DERIVED / "vacant_minimal.csv")
     vacant["ward_spatial"] = vacant["ward_spatial"].astype(int)
     return vacant
 
 @st.cache_data
 def load_foreclosures_timeseries():
     foreclosures = pd.read_csv(
-        "https://raw.githubusercontent.com/aaryal22/final_project_dataviz_group2/main/dataset/raw/foreclosures_chicago_wards_clean.csv"
+        "https://raw.githubusercontent.com/aaryal22/final_project_dataviz_group2/main/data/derived-data/foreclosure.csv"
     )
     foreclosures["ward"] = foreclosures["Geography"].str.replace("Ward ", "", regex=False).astype(int)
     year_cols = [c for c in foreclosures.columns if c.isdigit()]
@@ -39,7 +41,7 @@ def load_foreclosures_timeseries():
 
 @st.cache_data
 def load_debt_by_ward():
-    ward_debt = pd.read_csv(BASE / "dataset" / "cleaned" / "ward_debt_summary.csv")
+    ward_debt = pd.read_csv(DERIVED / "ward_debt_summary.csv")
     ward_debt["ward"] = ward_debt["ward"].astype(int)
     agg_cols = [c for c in ward_debt.columns if c != "ward"]
     ward_debt_long = ward_debt.melt(id_vars="ward", value_vars=agg_cols, var_name="category", value_name="amount")
@@ -50,8 +52,8 @@ def load_debt_by_ward():
 
 @st.cache_data
 def load_demolitions_by_ward():
-    summary_path = BASE / "dataset" / "cleaned" / "ward_demolition_summary.csv"
-    detail_path  = BASE / "dataset" / "cleaned" / "demolition_with_ward.csv"
+    summary_path = DERIVED / "ward_demolition_summary.csv"
+    detail_path  = DERIVED / "demolition_with_ward.csv"
 
     if summary_path.exists():
         demo = pd.read_csv(summary_path)
@@ -290,7 +292,6 @@ if not ward_demo.empty:
     st.subheader("Demolition Permits — City-Initiated vs. Private")
 
     if selected_ward == "Citywide":
-        # Stacked bar for citywide top 20
         demo_plot = ward_demo.sort_values("total_demolitions", ascending=False).head(20).copy()
         demo_plot["ward"]    = demo_plot["ward"].astype(str)
         demo_plot["private"] = demo_plot["total_demolitions"] - demo_plot["city_initiated"]
@@ -314,13 +315,12 @@ if not ward_demo.empty:
         st.plotly_chart(fig_demo, use_container_width=True)
 
     else:
-        # Donut chart for single ward
         wr = ward_demo[ward_demo["ward"] == selected_ward]
         if not wr.empty:
-            r           = wr.iloc[0]
-            city_n      = int(r["city_initiated"])
-            private_n   = int(r["total_demolitions"]) - city_n
-            total_n     = int(r["total_demolitions"])
+            r         = wr.iloc[0]
+            city_n    = int(r["city_initiated"])
+            private_n = int(r["total_demolitions"]) - city_n
+            total_n   = int(r["total_demolitions"])
 
             fig_demo = go.Figure(data=[go.Pie(
                 labels=["City-Initiated", "Private"],
@@ -338,9 +338,7 @@ if not ward_demo.empty:
                 legend=dict(orientation="h", x=0.3, y=-0.1),
                 annotations=[dict(
                     text=f"<b>{total_n:,}</b><br>total",
-                    x=0.5, y=0.5,
-                    font_size=16,
-                    showarrow=False
+                    x=0.5, y=0.5, font_size=16, showarrow=False
                 )]
             )
             st.plotly_chart(fig_demo, use_container_width=True)
