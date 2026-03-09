@@ -4,9 +4,12 @@ from shapely.geometry import Point
 from pathlib import Path
 
 # Project paths
-PROJECT_ROOT = Path.cwd()
+# Project paths
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
 RAW_DATA = PROJECT_ROOT / "data" / "raw-data"
 DERIVED_DATA = PROJECT_ROOT / "data" / "derived-data"
+
 DERIVED_DATA.mkdir(parents=True, exist_ok=True)
 
 # Load ward boundaries
