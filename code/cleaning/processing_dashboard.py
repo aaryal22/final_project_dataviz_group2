@@ -1,24 +1,32 @@
 import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point
+from pathlib import Path
 
-# --------------------------------------------------
-# 1️⃣ LOAD 2023 WARD BOUNDARIES
-# --------------------------------------------------
+# PROJECT PATHS
+
+PROJECT_ROOT = Path.cwd().parents[1]
+
+RAW_DATA = PROJECT_ROOT / "data" / "raw-data"
+DERIVED_DATA = PROJECT_ROOT / "data" / "derived-data"
+
+DERIVED_DATA.mkdir(parents=True, exist_ok=True)
+
+# LOAD 2023 WARD BOUNDARIES
 
 wards = gpd.read_file(
-    "~/Downloads/Boundaries - Wards (2023-)_20260301/geo_export_dd898801-215f-493e-988d-d356065abd03.shp"
+    RAW_DATA / "wards_2023_with_2024_foreclosures.geojson"
 )
 
 wards = wards.to_crs(epsg=4326)
+
+# ensure ward column is numeric
 wards["ward"] = wards["ward"].astype(int)
 
-# --------------------------------------------------
-# 2️⃣ LOAD VACANT PARCEL DATA
-# --------------------------------------------------
+# LOAD VACANT PARCEL DATA
 
 vacant = pd.read_csv(
-    "~/Downloads/Chicago_Vacant_Land_Parcels(in).csv"
+    RAW_DATA / "vacant_minimal.csv"
 )
 
 vacant["latitude"] = vacant["latitude"].astype(float)
@@ -32,14 +40,7 @@ vacant_gdf = gpd.GeoDataFrame(
     crs="EPSG:4326"
 )
 
-# --------------------------------------------------
-# 3️⃣ SPATIAL JOIN VACANT → WARD (2023)
-# --------------------------------------------------
-
-# Drop any leftover join columns
-for col in ["index_right", "index_left"]:
-    if col in vacant_gdf.columns:
-        vacant_gdf = vacant_gdf.drop(columns=[col])
+# SPATIAL JOIN VACANT → WARD
 
 vacant_joined = gpd.sjoin(
     vacant_gdf,
@@ -48,12 +49,17 @@ vacant_joined = gpd.sjoin(
     predicate="within"
 )
 
+# rename ward column from join
 vacant_joined = vacant_joined.rename(columns={"ward": "ward_spatial"})
-vacant_joined = vacant_joined.drop(columns=["index_right"])
 
-# --------------------------------------------------
-# 4️⃣ AGGREGATE VACANT COUNT BY WARD
-# --------------------------------------------------
+# remove duplicate columns created by sjoin
+vacant_joined = vacant_joined.loc[:, ~vacant_joined.columns.duplicated()]
+
+# remove spatial join index column if present
+if "index_right" in vacant_joined.columns:
+    vacant_joined = vacant_joined.drop(columns=["index_right"])
+
+# AGGREGATE VACANT COUNT BY WARD
 
 vacant_by_ward = (
     vacant_joined
@@ -62,14 +68,11 @@ vacant_by_ward = (
     .reset_index(name="vacant_count")
 )
 
-# --------------------------------------------------
-# 5️⃣ LOAD FORECLOSURE RATE (2024)
-# --------------------------------------------------
+# LOAD FORECLOSURE RATE (2024)
 
 foreclosures = pd.read_csv(
-    "https://raw.githubusercontent.com/aaryal22/final_project_dataviz_group2/main/dataset/raw/foreclosures_chicago_wards_clean.csv"
+    RAW_DATA / "foreclosures_chicago_wards_clean.csv"
 )
-
 
 foreclosures["ward"] = (
     foreclosures["Geography"]
@@ -77,14 +80,12 @@ foreclosures["ward"] = (
     .astype(int)
 )
 
-foreclosures_2024 = foreclosures[["ward", "2024"]]
-foreclosures_2024 = foreclosures_2024.rename(
-    columns={"2024": "foreclosure_rate_2024"}
+foreclosures_2024 = (
+    foreclosures[["ward", "2024"]]
+    .rename(columns={"2024": "foreclosure_rate_2024"})
 )
 
-# --------------------------------------------------
-# 6️⃣ MERGE EVERYTHING INTO WARDS
-# --------------------------------------------------
+# MERGE EVERYTHING INTO WARDS
 
 wards = wards.merge(
     vacant_by_ward,
@@ -99,55 +100,49 @@ wards = wards.merge(
     how="left"
 )
 
+# fill missing values
 wards["vacant_count"] = wards["vacant_count"].fillna(0)
 wards["foreclosure_rate_2024"] = wards["foreclosure_rate_2024"].fillna(0)
 
-# --------------------------------------------------
-# 7️⃣ BUILD HOUSING DISTRESS INDEX
-# --------------------------------------------------
 
-# Normalize foreclosure rate
+# BUILD HOUSING DISTRESS INDEX
+
+
+# normalize foreclosure rate
 wards["foreclosure_norm"] = (
     (wards["foreclosure_rate_2024"] - wards["foreclosure_rate_2024"].min()) /
     (wards["foreclosure_rate_2024"].max() - wards["foreclosure_rate_2024"].min())
 )
 
-# Normalize vacancy
+# normalize vacancy
 wards["vacancy_norm"] = (
     (wards["vacant_count"] - wards["vacant_count"].min()) /
     (wards["vacant_count"].max() - wards["vacant_count"].min())
 )
 
-# Composite index
+#COMPOSITE INDEX
 wards["housing_distress_index"] = (
-    wards["foreclosure_norm"] +
-    wards["vacancy_norm"]
+    wards["foreclosure_norm"] + wards["vacancy_norm"]
 ) / 2
 
-# --------------------------------------------------
-# 8️⃣ CREATE RISK TIERS (3 LEVELS)
-# --------------------------------------------------
-
+#CREATE RISK TIERS
 wards["risk_tier"] = pd.qcut(
     wards["housing_distress_index"],
     q=3,
     labels=["Low", "Watch", "Critical"]
 )
 
-# --------------------------------------------------
-# 9️⃣ SAVE FINAL DASHBOARD FILE
-# --------------------------------------------------
+
+# SAVE FINAL DASHBOARD FILES
 
 wards.to_file(
-    "wards_2023_final_dashboard.geojson",
+    DERIVED_DATA / "wards_2023_final_dashboard.geojson",
     driver="GeoJSON"
 )
 
 vacant_joined.to_file(
-    "vacant_with_ward_2023.geojson",
+    DERIVED_DATA / "vacant_with_ward_2023.geojson",
     driver="GeoJSON"
 )
 
 print("Processing complete. Files exported.")
-
-
