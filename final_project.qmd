@@ -9,7 +9,6 @@ format:
     geometry: top=0.7in, bottom=0.7in, left=0.85in, right=0.85in
     include-in-header:
       text: |
-        % ── Packages ──────────────────────────────────────────────
         \usepackage{fvextra}
         \usepackage{float}
         \usepackage{makecell}
@@ -18,15 +17,15 @@ format:
         \usepackage{titlesec}
         \usepackage{xcolor}
         \usepackage{mdframed}
-        \usepackage{fontenc}
+        \usepackage[T1]{fontenc}
         \usepackage{microtype}
         \usepackage{lmodern}
         \usepackage{array}
         \usepackage{tabularx}
         \usepackage{enumitem}
+        \usepackage{titling}
         \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 
-        % ── Color palette ─────────────────────────────────────────
         \definecolor{chicagored}{HTML}{B22222}
         \definecolor{slatebg}{HTML}{F4F5F7}
         \definecolor{rulegray}{HTML}{CCCCCC}
@@ -34,11 +33,9 @@ format:
         \definecolor{mutedtext}{HTML}{555555}
         \definecolor{pillbg}{HTML}{E8ECF2}
 
-        % ── Typography & spacing ──────────────────────────────────
         \setlength{\parskip}{3.5pt}
         \setlength{\parindent}{0pt}
 
-        % ── Section styling: navy rule above, tight spacing ───────
         \titleformat{\section}
           {\color{accentnavy}\normalfont\large\bfseries}
           {}{0em}{}[{\color{rulegray}\titlerule[0.4pt]}]
@@ -49,7 +46,6 @@ format:
           {}{0em}{}
         \titlespacing*{\subsection}{0pt}{5pt}{1pt}
 
-        % ── Shaded methodology box ────────────────────────────────
         \newmdenv[
           backgroundcolor=slatebg,
           linecolor=rulegray,
@@ -62,28 +58,15 @@ format:
           skipbelow=4pt
         ]{methodbox}
 
-        % ── Compact list spacing ──────────────────────────────────
         \setlist[itemize]{noitemsep, topsep=2pt, parsep=0pt, leftmargin=14pt}
         \setlist[enumerate]{noitemsep, topsep=2pt, parsep=0pt, leftmargin=14pt}
 
-        % ── Title block override ──────────────────────────────────
-        \usepackage{titling}
-        \pretitle{%
-          \begin{center}
-          \color{accentnavy}\LARGE\bfseries
-        }
-        \posttitle{%
-          \end{center}\vspace{-4pt}
-        }
-        \presubtitle{%
-          \begin{center}\color{mutedtext}\normalsize\itshape
-        }
-        \postsubtitle{%
-          \end{center}\vspace{2pt}{\color{rulegray}\hrule height 0.6pt}\vspace{4pt}
-        }
+        \pretitle{\begin{center}\color{accentnavy}\LARGE\bfseries}
+        \posttitle{\end{center}\vspace{-4pt}}
         \preauthor{\begin{center}\small\color{mutedtext}}
         \postauthor{\end{center}}
-        \predate{}\postdate{}
+        \predate{}
+        \postdate{}
 author: |
   Aishani Mathur · Ayusha Aryal · Taha Rashid \
   \small\textit{M/W 10:30 \quad aishanimathur · aaryal22 · TahaRashid7}
