@@ -1,6 +1,7 @@
 ---
 title: "The Cycle of Disinvestment: Turning Property Distress into Policy Opportunity"
 format:
+  html: default
   pdf:
     include-in-header:
       text: |
@@ -99,11 +100,11 @@ alt.data_transformers.disable_max_rows()
 
 #Making reproducible data paths
 base_dir = Path.cwd()
-cleaned_dir = base_dir / "dataset" / "cleaned"
-raw_dir = base_dir / "dataset" / "raw"
+cleaned_dir = base_dir / "data" / "derived-data"
+raw_dir = base_dir / "data" / "raw-data"
 
 df = pd.read_csv(cleaned_dir/ "Merged_data.csv")
-debt = pd.read_excel(raw_dir/ "debt.xlsx")
+debt = pd.read_csv(cleaned_dir/ "ward_debt_summary.csv")
 
 top5 = df.nlargest(5, "vacant_land").copy()
 bottom5 = df.nsmallest(5, "vacant_land").copy()
@@ -180,6 +181,13 @@ Total foreclosures in Chicago peaked from 2008-2010, mirroring the national econ
 
 ### Most of Chicago's outstanding utility debt comes from unpaid water balance
 ```{python}
+debt = debt.rename(columns={"Water (Service)": "Total Water Balance",
+    "Sewer (Service)": "Total Sewer Balance",
+    "Water Penalty": "Total Water Penalty Balance",
+    "Sewer Penalty": "Total Sewer Penalty Balance",
+    "Water Tax (Service)": "Total Water Tax Balance",
+    "Sewer Tax (Service)": "Total Sewer Tax Balance",
+    "Garbage Penalty": "Total Garbage Penalty Balance"})
 debt_categories = ["Total Water Balance",
     "Total Sewer Balance",
     "Total Water Penalty Balance",
