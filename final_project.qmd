@@ -2,7 +2,7 @@
 title: "The Cycle of Disinvestment: Turning Property Distress into Policy Opportunity"
 format:
   html: default
-  pdf:
+  pdf: default
     include-in-header:
       text: |
         % Enable wrapping for Pandoc code blocks in PDF
