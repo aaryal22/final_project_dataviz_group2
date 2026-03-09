@@ -173,27 +173,6 @@ wards = wards.merge(
 wards["vacant_count"] = wards["vacant_count"].fillna(0)
 wards["foreclosure_rate_2024"] = wards["foreclosure_rate_2024"].fillna(0)
 
-# Build housing distress index
-wards["foreclosure_norm"] = (
-    (wards["foreclosure_rate_2024"] - wards["foreclosure_rate_2024"].min()) /
-    (wards["foreclosure_rate_2024"].max() - wards["foreclosure_rate_2024"].min())
-)
-
-wards["vacancy_norm"] = (
-    (wards["vacant_count"] - wards["vacant_count"].min()) /
-    (wards["vacant_count"].max() - wards["vacant_count"].min())
-)
-
-wards["housing_distress_index"] = (
-    wards["foreclosure_norm"] + wards["vacancy_norm"]
-) / 2
-
-# Create risk tiers
-wards["risk_tier"] = pd.qcut(
-    wards["housing_distress_index"],
-    q=3,
-    labels=["Low", "Watch", "Critical"]
-)
 
 # Save ward-level dataset for dashboard
 wards.to_file(
