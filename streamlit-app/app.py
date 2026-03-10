@@ -33,6 +33,7 @@ def load_foreclosures_timeseries():
     foreclosures = pd.read_csv(
         "https://raw.githubusercontent.com/aaryal22/final_project_dataviz_group2/main/data/derived-data/foreclosure.csv"
     )
+    foreclosures = foreclosures[foreclosures["Geography"].str.match(r"^Ward \d+$", na=False)]
     foreclosures["ward"] = foreclosures["Geography"].str.replace("Ward ", "", regex=False).astype(int)
     year_cols = [c for c in foreclosures.columns if c.isdigit()]
     long = foreclosures.melt(id_vars=["ward"], value_vars=year_cols, var_name="year", value_name="foreclosures")
